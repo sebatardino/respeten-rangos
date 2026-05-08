@@ -1558,52 +1558,44 @@ function exportSquadListPNG(match, filter) {
   }
 
   const W = 1080;
-  const HEADER = 300;
-  const ROW = 64;
+  const HEADER = 280;
+  const ROW = 76;
   const itemsPerCol = Math.ceil(list.length / 2);
-  const H = HEADER + Math.max(itemsPerCol * ROW, 400) + 120;
+  const H = HEADER + Math.max(itemsPerCol * ROW, 400) + 100;
 
   const c = document.createElement("canvas"); c.width = W; c.height = H;
   const x = c.getContext("2d");
 
-  // EA Sports FC style background
-  x.fillStyle = "#070B0A"; x.fillRect(0,0,W,H);
-  
-  // dotted texture
-  x.fillStyle="rgba(255,255,255,0.03)";
-  for(let i=0;i<W;i+=10) for(let j=0;j<H;j+=10) x.fillRect(i,j,2,2);
-  
-  // corner accents
-  x.fillStyle="#FF5C00"; x.fillRect(0,0,W,20);
-  x.fillRect(0,H-20,W,20);
+  // Minimalist dark background
+  x.fillStyle = "#0D0D0D"; x.fillRect(0,0,W,H);
 
-  x.shadowColor="rgba(255,92,0,0.3)"; x.shadowBlur=30; x.shadowOffsetY=10;
-  x.drawImage(SHARED_LOGO, 50, 60, 150, 150);
-  x.shadowBlur=0; x.shadowOffsetY=0;
+  // Logo
+  x.drawImage(SHARED_LOGO, 60, 60, 130, 130);
 
-  x.fillStyle="#FF5C00"; x.font="900 40px 'Archivo Black', system-ui"; x.textAlign="left";
-  x.fillText("RESPETEN RANGOS FC", 230, 110);
+  x.fillStyle = "#FF5C00"; x.font="900 22px 'Archivo Black', system-ui"; x.textAlign="left";
+  x.fillText("RESPETEN RANGOS FC", 220, 95);
 
-  x.fillStyle="#F5F5F5"; x.font="900 60px 'Archivo Black', system-ui";
-  x.fillText("SQUAD LIST", 230, 180);
+  x.fillStyle = "#F5F5F5"; x.font="900 52px 'Archivo Black', system-ui"; x.textAlign="left";
+  x.fillText("SQUAD LIST", 220, 150);
 
-  x.fillStyle="#8FA397"; x.font="800 24px Archivo, system-ui";
+  x.fillStyle = "#8FA397"; x.font="700 22px Archivo, system-ui";
   const stageStr = (match.stage&&match.stage!=="LIGA")?match.stage:"FECHA "+match.matchday;
-  x.fillText(`VS ${match.rival} · ${stageStr}`, 230, 220);
-
-  const POS_COL={ARQUERO:"#F59E0B",DEFENSOR:"#3B82F6",MEDIO:"#22C55E",DELANTERO:"#EF4444"};
+  x.fillText(`VS ${match.rival} · ${stageStr}`.toUpperCase(), 220, 185);
   
+  // Separator line
+  x.fillStyle = "#222"; x.fillRect(60, 230, W-120, 2);
+
   list.forEach((p, i) => {
     const col = i < itemsPerCol ? 0 : 1;
     const row = i % itemsPerCol;
-    const px = 50 + col * (W/2);
+    const px = 60 + col * (W/2 - 20);
     const py = HEADER + row * ROW;
-    const cw = W/2 - 70;
+    const cw = W/2 - 100;
 
-    x.fillStyle = "rgba(255,255,255,0.05)"; x.fillRect(px, py, cw, ROW - 12);
-    const pc = POS_COL[p.position] || "#666";
-    x.fillStyle = pc; x.fillRect(px, py, 6, ROW - 12);
+    // Subtle row background
+    x.fillStyle = "rgba(255,255,255,0.03)"; x.fillRect(px, py, cw, ROW - 14);
     
+    // Status setup
     let statusColor = "#8FA397";
     let statusText = "";
     if (!p.available) {
@@ -1613,24 +1605,27 @@ function exportSquadListPNG(match, filter) {
        statusColor = "#22C55E"; statusText = "CONFIRMADO";
     }
 
-    x.fillStyle = pc + "33"; x.fillRect(px+20, py+10, 44, ROW-32);
-    x.fillStyle = pc; x.font="900 18px 'Archivo Black', system-ui"; x.textAlign="center";
-    x.fillText("#"+p.number, px+42, py+33);
+    // Number block
+    x.fillStyle = "rgba(255,255,255,0.03)"; x.fillRect(px, py, 60, ROW-14);
+    x.fillStyle = "#8FA397"; x.font="900 18px 'Archivo Black', system-ui"; x.textAlign="center";
+    x.fillText("#" + p.number, px+30, py+38);
 
+    // Player Name
     x.textAlign="left";
-    x.fillStyle = "#F5F5F5"; x.font="800 24px Archivo, system-ui";
-    x.fillText(p.name, px+84, py+35);
+    x.fillStyle = "#F5F5F5"; x.font="800 22px Archivo, system-ui";
+    x.fillText(p.name, px+80, py+30);
 
-    x.fillStyle = statusColor; x.font="900 16px 'Archivo Black', system-ui"; x.textAlign="right";
+    // Status (below name to avoid overlapping)
+    x.fillStyle = statusColor; x.font="800 13px 'Archivo Black', system-ui"; x.textAlign="left";
     if (filter !== "yes") {
-      x.fillText(statusText, px+cw-20, py+33);
+      x.fillText(statusText, px+80, py+50);
     }
-    x.textAlign="left";
   });
 
-  x.fillStyle="#666"; x.font="600 18px Archivo, system-ui"; x.textAlign="center";
+  // Footer
+  x.fillStyle="#555"; x.font="600 16px Archivo, system-ui"; x.textAlign="center";
   let filterDesc = filter === "yes" ? "Solo Confirmados" : (filter === "pending" ? "Confirmados + Pendientes" : "Plantel Completo");
-  x.fillText(`Reporte de Disponibilidad (${filterDesc}) · Generado ` + new Date().toLocaleDateString("es-AR"), W/2, H - 60);
+  x.fillText(`Reporte de Disponibilidad (${filterDesc}) · Generado ` + new Date().toLocaleDateString("es-AR"), W/2, H - 40);
 
   download(c, `squad_${match.rival}.png`);
 }
