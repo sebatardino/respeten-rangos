@@ -781,7 +781,7 @@ function MatchDetailScreen({state,setState,go,matchId}){
 }
 
 function SquadExportModal({match, onClose, onExport}) {
-  const [f, setF] = useState("yes");
+  const [f, setF] = useState("pending");
   return (
     <Modal title="Reporte de Disponibilidad" onClose={onClose}>
       <div className="field mb10"><label>Elegí qué jugadores incluir en el reporte PNG:</label></div>
@@ -949,9 +949,9 @@ function FormacionScreen({state,setState,go,matchId}){
         ))}
       </div>
 
-      <div className="mt14" style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+      <div className="mt14">
         {/* PITCH */}
-        <div className="pitch" style={{flex:"0 0 62%"}}>
+        <div className="pitch" style={{width:"100%"}}>
           <svg className="lines" viewBox="0 0 100 133" preserveAspectRatio="none">
             <rect x="2" y="2" width="96" height="129" fill="none" stroke="#ffffff55" strokeWidth=".3"/>
             <line x1="2" y1="66.5" x2="98" y2="66.5" stroke="#ffffff55" strokeWidth=".3"/>
@@ -969,22 +969,32 @@ function FormacionScreen({state,setState,go,matchId}){
           ))}
         </div>
 
-        {/* SUPLENTES PANEL */}
-        <div style={{flex:"1 1 0",display:"flex",flexDirection:"column",gap:5}}>
-          <div style={{fontSize:9,fontWeight:800,letterSpacing:".15em",textTransform:"uppercase",color:"var(--muted)",marginBottom:2}}>// SUP</div>
+        {/* SUPLENTES PANEL (NOW "JUGADORES DISPONIBLES" GROUPED BY POS) */}
+        <div className="mt14">
+          {POSITIONS.map(pos => {
+             const g = supSorted.filter(p => p.position === pos);
+             if(!g.length) return null;
+             return (
+               <div key={pos} className="mb10">
+                 <div style={{fontSize:9,fontWeight:800,letterSpacing:".15em",textTransform:"uppercase",color:POS_COLOR[pos],marginBottom:4}}>// {pos}</div>
+                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(100px, 1fr))",gap:5}}>
+                   {g.map(p=>(
+                     <div key={p.id} data-pos={p.position} style={{position:"relative",overflow:"hidden",background:"var(--card)",border:"1px solid var(--border)",borderRadius:10,padding:"7px 8px 7px 11px"}}>
+                       <div style={{position:"absolute",left:0,top:0,bottom:0,width:3,background:"var(--pc)",borderRadius:"10px 0 0 10px"}}/>
+                       <div style={{fontWeight:800,fontSize:11,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",color:"var(--fg)"}}>{p.name.split(" ")[0]}</div>
+                       <div style={{fontSize:9,marginTop:2,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                         <span style={{color:"var(--pc)",fontWeight:800,letterSpacing:".06em"}}>{POS_SHORT[p.position]}</span>
+                         <span style={{color:"var(--muted)"}}>#{p.number}</span>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             )
+          })}
           {supSorted.length===0 && (
-            <div style={{fontSize:10,color:"var(--muted)",textAlign:"center",padding:"10px 4px",border:"1px dashed var(--border)",borderRadius:8}}>Sin<br/>suplentes</div>
+            <div style={{fontSize:10,color:"var(--muted)",textAlign:"center",padding:"10px 4px",border:"1px dashed var(--border)",borderRadius:8}}>Sin suplentes disponibles</div>
           )}
-          {supSorted.map(p=>(
-            <div key={p.id} data-pos={p.position} style={{position:"relative",overflow:"hidden",background:"var(--card)",border:"1px solid var(--border)",borderRadius:10,padding:"7px 8px 7px 11px"}}>
-              <div style={{position:"absolute",left:0,top:0,bottom:0,width:3,background:"var(--pc)",borderRadius:"10px 0 0 10px"}}/>
-              <div style={{fontWeight:800,fontSize:11,lineHeight:1.2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",color:"var(--fg)"}}>{p.name.split(" ")[0]}</div>
-              <div style={{fontSize:9,marginTop:2,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span style={{color:"var(--pc)",fontWeight:800,letterSpacing:".06em"}}>{POS_SHORT[p.position]}</span>
-                <span style={{color:"var(--muted)"}}>#{p.number}</span>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 
@@ -1092,7 +1102,7 @@ function RosterScreen({state,setState,go}){
           mp = m.players.map(pp=>pp.id===pl.id?{...pp,name:pl.name,number:pl.number,position:pl.position}:pp);
         } else {
           const newId = players[players.length-1].id;
-          mp = [...m.players, {id:newId,number:pl.number,name:pl.name,position:pl.position,available:false,unavReason:"",starter:false,timePlayed:0,paid:false,payMethod:""}];
+          mp = [...m.players, {id:newId,number:pl.number,name:pl.name,position:pl.position,available:false,unavReason:"PENDING",starter:false,timePlayed:0,paid:false,payMethod:""}];
         }
         return {...m,players:mp};
       })}));
@@ -1512,7 +1522,7 @@ function exportMatchPromoPNG(match){
   x.fillStyle="#FF5C00"; x.font="900 50px 'Archivo Black', system-ui"; x.textAlign="center";
   x.fillText("MATCH DAY", W/2, 720);
 
-    x.fillStyle="#F5F5F5"; x.font="900 130px 'Archivo Black', system-ui";
+    x.fillStyle="#F5F5F5"; x.font="900 90px 'Archivo Black', system-ui";
     x.fillText("VS " + match.rival, W/2, 860);
 
     x.fillStyle="#8FA397"; x.font="800 40px 'Archivo Black', system-ui";
